@@ -33,10 +33,10 @@ def import_submodules(package, recursive=True):
         package = importlib.import_module(package)
     results = {}
     for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
-        full_name = package.__name__ + '.' + name
+        full_name = f'{package.__name__}.{name}'
         results[full_name] = importlib.import_module(full_name)
         if recursive and is_pkg:
-            results.update(import_submodules(full_name))
+            results |= import_submodules(full_name)
     return results
 
 def get_functions(modules,args=None):
@@ -82,19 +82,16 @@ def credit():
 
 def print_result(data,args,phone, country_code,start_time,websites):
     def print_color(text,color,args):
-        if args.nocolor == False:
-            return(colored(text,color))
-        else:
-            return(text)
+        return (colored(text,color)) if args.nocolor == False else text
 
     description = print_color("[+] Phone number used","green",args) + "," + print_color(" [-] Phone number not used", "magenta",args) + "," + print_color(" [x] Rate limit","red",args)
-    full_number="+"+str(country_code)+" "+str(phone)
+    full_number = f"+{str(country_code)} {str(phone)}"
     if args.noclear==False:
         print("\033[H\033[J")
     else:
         print("\n")
     print("*" * (len(full_number) + 6))
-    print("   " + full_number)
+    print(f"   {full_number}")
     print("*" * (len(full_number) + 6))
 
     for results in data:
@@ -110,8 +107,15 @@ def print_result(data,args,phone, country_code,start_time,websites):
             print(websiteprint)
 
     print("\n" + description)
-    print(str(len(websites)) + " websites checked in " +
-          str(round(time.time() - start_time, 2)) + " seconds")
+    print(
+        (
+            (
+                f"{len(websites)} websites checked in "
+                + str(round(time.time() - start_time, 2))
+            )
+            + " seconds"
+        )
+    )
 
 
 async def launch_module(module, phone, country_code, client, out):
